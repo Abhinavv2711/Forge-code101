@@ -1,77 +1,126 @@
-<p align="center">
-  <a href="https://marketplace.visualstudio.com/items?itemName=RooVeterinaryInc.roo-cline"><img src="https://img.shields.io/badge/VS_Code_Marketplace-007ACC?style=flat&logo=visualstudiocode&logoColor=white" alt="VS Code Marketplace"></a>  
-</p>
+# ForgeCode — Editor-Native Coding Agent on TrueForge
 
-# Roo Code
-
-> Your AI-Powered Dev Team, Right in Your Editor
-
-<details>
-  <summary>🌐 Available languages</summary>
-
-- [English](README.md)
-- [Català](locales/ca/README.md)
-- [Deutsch](locales/de/README.md)
-- [Español](locales/es/README.md)
-- [Français](locales/fr/README.md)
-- [हिंदी](locales/hi/README.md)
-- [Bahasa Indonesia](locales/id/README.md)
-- [Italiano](locales/it/README.md)
-- [日本語](locales/ja/README.md)
-- [한국어](locales/ko/README.md)
-- [Nederlands](locales/nl/README.md)
-- [Polski](locales/pl/README.md)
-- [Português (BR)](locales/pt-BR/README.md)
-- [Русский](locales/ru/README.md)
-- [Türkçe](locales/tr/README.md)
-- [Tiếng Việt](locales/vi/README.md)
-- [简体中文](locales/zh-CN/README.md)
-- [繁體中文](locales/zh-TW/README.md)
-- ...
-    </details>
+> **Techfest 2026–27 | TrueFoundry Forge-a-thon Submission**  
+> An editor-native Visual Studio Code coding agent powered by the **TrueForge** agent harness.  
+> Integrates MCP editor capabilities, RAG keyword-retrieval context budgeting, hunk-by-hunk diff reviews with undo history, model failover resilience, and native context compaction.
 
 ---
 
-## What Can Roo Code Do For YOU?
+## 📌 Upstream Fork & Attribution
 
-- Generate Code from natural language descriptions and specs
-- Adapt with Modes: Code, Architect, Ask, Debug, and Custom Modes
-- Refactor & Debug existing code
-- Write & Update documentation
-- Answer Questions about your codebase
-- Automate repetitive tasks
-- Utilize MCP Servers
-
-## Modes
-
-Roo Code adapts to how you work:
-
-- Code Mode: everyday coding, edits, and file ops
-- Architect Mode: plan systems, specs, and migrations
-- Ask Mode: fast answers, explanations, and docs
-- Debug Mode: trace issues, add logs, isolate root causes
-- Custom Modes: build specialized modes for your team or workflow
-
-Learn more: [Using Modes](https://roocodeinc.github.io/Roo-Code/basic-usage/using-modes) • [Custom Modes](https://roocodeinc.github.io/Roo-Code/advanced-usage/custom-modes)
-
-## Resources
-
-- **[Documentation](https://roocodeinc.github.io/Roo-Code/):** The official guide to installing, configuring, and mastering Roo Code.
-- **[GitHub Issues](https://github.com/RooCodeInc/Roo-Code/issues):** Report bugs and track development.
+* **Declared Fork Repository:** [RooVetGit/Roo-Code](https://github.com/RooVetGit/Roo-Code)
+* **Declared Commit Point:** [`b867ec914`](https://github.com/RooVetGit/Roo-Code/commit/b867ec914) (*"Remove roocode.com web app (#12375)"*)
+* **Attribution & Licensing:** The upstream [LICENSE](LICENSE) (Apache 2.0) and all original contributor attributions are strictly preserved.
+* **Architecture Change:** Roo Code's internal LLM loop (`recursivelyMakeClineRequests`) has been completely replaced. The extension operates as an editor client to [TrueForge](https://github.com/truefoundry/trueforge), providing its editor actions via a local Model Context Protocol (MCP) server.
 
 ---
 
-## Disclaimer
+## 🚀 Key Features & Capabilities
 
-The Roo Code Extension was shut down on May 15th.
-
-- If you're looking for an alternative, check out [ZooCode](https://github.com/Zoo-Code-Org/Zoo-Code/) (a fork started by the Roo Code community) and [Cline](https://cline.bot/) (from where Roo Code originated).
-- If you were a paying user and have billing questions, please write [billing@roocode.com](mailto:billing@roocode.com).
-
-**Please note** that Roo Code, Inc does **not** make any representations or warranties regarding any code, models, or other tools provided or made available in connection with Roo Code, any associated third-party tools, or any resulting outputs. You assume **all risks** associated with the use of any such tools or outputs; such tools are provided on an **"AS IS"** and **"AS AVAILABLE"** basis. Such risks may include, without limitation, intellectual property infringement, cyber vulnerabilities or attacks, bias, inaccuracies, errors, defects, viruses, downtime, property loss or damage, and/or personal injury. You are solely responsible for your use of any such tools or outputs (including, without limitation, the legality, appropriateness, and results thereof).
+1. **Inline Edit (`Ctrl+Alt+I` / `Cmd+Alt+I`)**:
+   - Select code (or place the cursor) and type an instruction.
+   - Generates a single-turn diff presented directly in the VS Code editor for hunk-by-hunk review before writing.
+2. **Autonomous Agent Mode**:
+   - Single natural language prompts drive TrueForge through multi-step tool loops (read, search, edit, command execution).
+   - Discovers and edits multiple files unprompted without requiring explicit `@file` mentions.
+3. **Context Assembly with Size Budgeting**:
+   - Automatic RAG keyword-scoring retrieval across the workspace (`context.ts`).
+   - Configurable character budget (`roo-cline.trueforge.contextBudgetChars`, default 60k chars, max 12 files).
+   - Explicitly displays matched files and selection rationale in the chat stream before prepending `<retrieved-context>`.
+4. **Hunk-by-Hunk Diff Safety & Working Undo**:
+   - Zero silent writes to disk.
+   - Every file modification opens a VS Code diff view offering **Accept Hunk**, **Reject Hunk**, or **Stop Review**.
+   - Edits are committed via atomic `vscode.WorkspaceEdit`, allowing full `Ctrl+Z` undo functionality.
+5. **Real-Time Streaming & Safe Cancellation**:
+   - Streams reasoning and text deltas directly from TrueForge SSE events.
+   - Cancellation immediately halts TrueForge turns via `POST /sessions/{id}/cancel` without leaving half-applied edits on disk.
+6. **Automatic Model Resilience & Fallback**:
+   - Seamlessly fails over across secondary model FQNs (`roo-cline.trueforge.fallbackModels`) on network or provider errors.
+   - Guarantees the workspace remains pristine with zero changes on unrecoverable failures.
+7. **TrueForge Context Compaction & Subagents**:
+   - TrueForge native context compaction (`contextManagement.compaction: { enabled: true }`) automatically compresses conversation history during long runs.
+   - Visual indicators stream to chat when compaction cycles begin and complete (`thread.context_compaction_*`).
 
 ---
 
-## License
+## 🛠️ Architecture Overview
 
-[Apache 2.0 © 2026 Roo Code, Inc.](./LICENSE)
+```mermaid
+flowchart LR
+    A["VS Code Extension\n(ForgeCode)"] -- "Registers MCP Server\n(http://127.0.0.1:8791/mcp)" --> B["TrueForge Local Harness\n(http://localhost:8790)"]
+    A -- "POST /sessions/{id}/turns\n(Streaming SSE)" --> B
+    B -- "Tool Invocations\n(read_file, search_files, write_file)" --> A
+    B -- "Streams Events\n(model.message.delta, turn.done, ...)" --> A
+    A -- "Hunk Diffs" --> C["VS Code Editor View\n(User Accepts/Rejects)"]
+```
+
+### File Layout (`src/core/trueforge/`)
+* [`TrueForgeService.ts`](src/core/trueforge/TrueForgeService.ts): Singleton SDK client managing session lifecycles, MCP registration, and cancellation.
+* [`mcpServer.ts`](src/core/trueforge/mcpServer.ts): Local HTTP server implementing MCP tools: `read_file`, `list_files`, `search_files`, `write_file`, `replace_in_file`, `execute_command`, `get_diagnostics`, and `open_file`.
+* [`loop.ts`](src/core/trueforge/loop.ts): Consumes TrueForge streaming events, handles compaction/subagents, and manages model fallback failover.
+* [`review.ts`](src/core/trueforge/review.ts): Computes unified diff hunks, displays interactive diff panels, and applies atomic `WorkspaceEdit`s.
+* [`context.ts`](src/core/trueforge/context.ts): Performs keyword-scoring retrieval within the character budget.
+* [`inlineEdit.ts`](src/core/trueforge/inlineEdit.ts): Executes single-turn inline code transformations.
+* [`config.ts`](src/core/trueforge/config.ts): Reads VS Code settings under `roo-cline.trueforge.*`.
+
+---
+
+## 📦 Getting Started & Setup
+
+### Prerequisites
+* **Node.js**: `20.19.2` (or modern Node with pnpm)
+* **pnpm**: `10.8.1`
+* **TrueForge**: Running locally on `http://localhost:8790`
+
+### 1. Start TrueForge
+Because the extension's MCP server runs on `127.0.0.1`, allow loopback connections in TrueForge:
+
+**PowerShell:**
+```powershell
+$env:OUTBOUND_URL_ALLOWED_HOSTS='["127.0.0.1"]'
+npx @truefoundry/trueforge@latest
+```
+
+**Bash:**
+```bash
+OUTBOUND_URL_ALLOWED_HOSTS='["127.0.0.1"]' npx @truefoundry/trueforge@latest
+```
+
+### 2. Configure a Model Provider in TrueForge
+Configure any OpenAI-compatible or catalog provider via TrueForge's API or using the extension's Command Palette:
+* Press `Ctrl+Shift+P` -> **TrueForge: Configure OpenAI-Compatible Provider**.
+* Sample configuration is provided in [`trueforge/model-provider.example.json`](trueforge/model-provider.example.json).
+
+### 3. Build & Run the Extension
+```bash
+# Install dependencies
+pnpm install
+
+# Check types
+pnpm --filter roo-cline check-types
+
+# Launch in VS Code
+# Press F5 or run 'Run Extension' from .vscode/launch.json
+```
+
+---
+
+## ⚙️ Configuration Settings
+
+| Setting | Default | Description |
+| :--- | :--- | :--- |
+| `roo-cline.trueforge.baseUrl` | `http://localhost:8790` | Base URL of the local TrueForge harness |
+| `roo-cline.trueforge.model` | `openai/gpt-4.1` | Model FQN (`<provider>/<model>`) configured in TrueForge |
+| `roo-cline.trueforge.inlineEditModel` | `""` | Optional dedicated model for inline edits |
+| `roo-cline.trueforge.fallbackModels` | `[]` | List of fallback model FQNs tried automatically on failure |
+| `roo-cline.trueforge.contextBudgetChars`| `60000` | Character budget for automatic file retrieval |
+| `roo-cline.trueforge.agentName` | `""` | Optional saved TrueForge agent (see `trueforge/agent.json`) |
+| `roo-cline.trueforge.mcpPort` | `8791` | Local port for the editor MCP server |
+| `roo-cline.trueforge.autoApproveCommands` | `false` | Run terminal commands without confirmation dialogs |
+
+---
+
+## 📄 License
+
+Licensed under the **Apache License, Version 2.0** ([LICENSE](LICENSE)).  
+Preserves upstream attribution to Roo Code, Inc. and Cline contributors.

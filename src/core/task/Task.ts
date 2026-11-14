@@ -102,6 +102,8 @@ import { type AssistantMessageContent, presentAssistantMessage } from "../assist
 import { NativeToolCallParser } from "../assistant-message/NativeToolCallParser"
 import { manageContext, willManageContext } from "../context-management"
 import { ClineProvider } from "../webview/ClineProvider"
+import { TrueForgeService } from "../trueforge/TrueForgeService"
+import { runTrueForgeTask } from "../trueforge/loop"
 import { MultiSearchReplaceDiffStrategy } from "../diff/strategies/multi-search-replace"
 import {
 	type ApiMessage,
@@ -2219,6 +2221,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 		this.abort = true
 
+		void TrueForgeService.instance.cancelTask(this.taskId)
+
 		// Reset consecutive error counters on abort (manual intervention)
 		this.consecutiveNoToolUseCount = 0
 		this.consecutiveNoAssistantMessagesCount = 0
@@ -2428,34 +2432,12 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 		// Kicks off the checkpoints initialization process in the background.
 		getCheckpointService(this)
 
-		let nextUserContent = userContent
-		let includeFileDetails = true
-
 		this.emit(RooCodeEventName.TaskStarted)
 
-		while (!this.abort) {
-			const didEndLoop = await this.recursivelyMakeClineRequests(nextUserContent, includeFileDetails)
-			includeFileDetails = false // We only need file details the first time.
-
-			// The way this agentic loop works is that cline will be given a
-			// task that he then calls tools to complete. Unless there's an
-			// attempt_completion call, we keep responding back to him with his
-			// tool's responses until he either attempt_completion or does not
-			// use anymore tools. If he does not use anymore tools, we ask him
-			// to consider if he's completed the task and then call
-			// attempt_completion, otherwise proceed with completing the task.
-			// There is a MAX_REQUESTS_PER_TASK limit to prevent infinite
-			// requests, but Cline is prompted to finish the task as efficiently
-			// as he can.
-
-			if (didEndLoop) {
-				// For now a task never 'completes'. This will only happen if
-				// the user hits max requests and denies resetting the count.
-				break
-			} else {
-				nextUserContent = [{ type: "text", text: formatResponse.noToolsUsed() }]
-			}
-		}
+		// The agent loop is owned by TrueForge: this extension creates a
+		// session, streams turns from the TrueForge harness, and exposes editor
+		// actions as MCP tools. No upstream LLM loop is used here.
+		await runTrueForgeTask(this, userContent)
 	}
 
 	public async recursivelyMakeClineRequests(

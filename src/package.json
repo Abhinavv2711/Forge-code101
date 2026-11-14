@@ -159,6 +159,16 @@
 				"command": "roo-cline.toggleAutoApprove",
 				"title": "%command.toggleAutoApprove.title%",
 				"category": "%configuration.title%"
+			},
+			{
+				"command": "roo-cline.trueforgeInlineEdit",
+				"title": "TrueForge: Inline Edit",
+				"category": "TrueForge"
+			},
+			{
+				"command": "roo-cline.trueforgeConfigureProvider",
+				"title": "TrueForge: Configure OpenAI-Compatible Provider",
+				"category": "TrueForge"
 			}
 		],
 		"menus": {
@@ -262,6 +272,14 @@
 				"mac": "cmd+alt+a",
 				"win": "ctrl+alt+a",
 				"linux": "ctrl+alt+a"
+			},
+			{
+				"command": "roo-cline.trueforgeInlineEdit",
+				"key": "ctrl+alt+i",
+				"mac": "cmd+alt+i",
+				"win": "ctrl+alt+i",
+				"linux": "ctrl+alt+i",
+				"when": "editorTextFocus"
 			}
 		],
 		"submenus": [
@@ -277,6 +295,63 @@
 		"configuration": {
 			"title": "%configuration.title%",
 			"properties": {
+				"roo-cline.trueforge.baseUrl": {
+					"type": "string",
+					"default": "http://localhost:8790",
+					"description": "Base URL of the local TrueForge harness."
+				},
+				"roo-cline.trueforge.model": {
+					"type": "string",
+					"default": "openai/gpt-4.1",
+					"description": "Model FQN (provider/model) configured inside TrueForge. Ignored when an agent name is set."
+				},
+				"roo-cline.trueforge.inlineEditModel": {
+					"type": "string",
+					"default": "",
+					"description": "Optional model FQN used for inline edits instead of roo-cline.trueforge.model. Useful when the agent model is weak at code generation."
+				},
+				"roo-cline.trueforge.fallbackModels": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					},
+					"default": [],
+					"description": "Model FQNs to try automatically when the primary model fails (inline agent only)."
+				},
+				"roo-cline.trueforge.contextBudgetChars": {
+					"type": "number",
+					"default": 60000,
+					"minimum": 1000,
+					"maximum": 400000,
+					"description": "Character budget for automatic retrieval of relevant workspace files."
+				},
+				"roo-cline.trueforge.agentName": {
+					"type": "string",
+					"default": "",
+					"description": "Optional named TrueForge agent to use instead of an inline agent specification."
+				},
+				"roo-cline.trueforge.instructions": {
+					"type": "string",
+					"default": "",
+					"description": "Optional system instructions for the inline TrueForge agent."
+				},
+				"roo-cline.trueforge.mcpServerName": {
+					"type": "string",
+					"default": "roo-code-editor",
+					"description": "Name used to register the editor MCP server in TrueForge."
+				},
+				"roo-cline.trueforge.mcpPort": {
+					"type": "number",
+					"default": 8791,
+					"minimum": 1024,
+					"maximum": 65535,
+					"description": "Local port for the editor MCP server. TrueForge connects to this server."
+				},
+				"roo-cline.trueforge.autoApproveCommands": {
+					"type": "boolean",
+					"default": false,
+					"description": "Run commands from the TrueForge agent without asking for confirmation."
+				},
 				"roo-cline.allowedCommands": {
 					"type": "array",
 					"items": {
@@ -438,6 +513,7 @@
 		"@roo-code/core": "workspace:^",
 		"@roo-code/ipc": "workspace:^",
 		"@roo-code/types": "workspace:^",
+		"@truefoundry/trueforge-sdk": "0.184.1",
 		"@vscode/codicons": "^0.0.36",
 		"ai-sdk-provider-poe": "2.0.18",
 		"async-mutex": "^0.5.0",
@@ -550,3 +626,4 @@
 		"zod-to-ts": "^1.2.0"
 	}
 }
+

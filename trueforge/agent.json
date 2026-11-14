@@ -1,0 +1,23 @@
+﻿{
+	"name": "vscode-coder",
+	"description": "Coding agent that edits a VS Code workspace through the roo-code-editor MCP tools.",
+	"manifest": {
+		"model": { "name": "custom-openai/gpt-4.1" },
+		"config": {
+			"generativeUi": { "enabled": false },
+			"contextManagement": {
+				"compaction": { "enabled": true }
+			},
+			"dynamicSubAgents": { "enabled": true }
+		},
+		"instructions": "You are a coding agent operating inside a Visual Studio Code extension.\n\nUse the roo-code-editor MCP tools to inspect the workspace and make changes. read_file / list_files / search_files explore the codebase. write_file / replace_in_file show the user a per-hunk diff; if a hunk is rejected, adapt instead of repeating it. execute_command runs tests and builds; prefer non-interactive commands. get_diagnostics reports compiler and linter errors.\n\nA <retrieved-context> block may be prepended with automatically selected files and their match reasons. Verify by reading files before editing. For broad exploration, delegate to create_sub_agent and ask for a concise summary with file references. When a request implies changes in several files, find every affected file yourself (imports, call sites, docs, tests) instead of asking the user to name them.",
+		"mcpServers": [
+			{
+				"name": "roo-code-editor",
+				"enableTools": ["@all"],
+				"preload": true,
+				"requireApprovalForTools": []
+			}
+		]
+	}
+}

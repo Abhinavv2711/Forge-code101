@@ -11,6 +11,8 @@ import { focusPanel } from "../utils/focusPanel"
 import { handleNewTask } from "./handleTask"
 import { CodeIndexManager } from "../services/code-index/manager"
 import { importSettingsWithFeedback } from "../core/config/importExport"
+import { runTrueForgeInlineEdit } from "../core/trueforge/inlineEdit"
+import { configureTrueForgeModelProvider } from "../core/trueforge/providerSetup"
 import { t } from "../i18n"
 
 /**
@@ -66,6 +68,13 @@ export const registerCommands = (options: RegisterCommandOptions) => {
 		const command = getCommand(id as CommandId)
 		context.subscriptions.push(vscode.commands.registerCommand(command, callback))
 	}
+
+	context.subscriptions.push(
+		vscode.commands.registerCommand("roo-cline.trueforgeInlineEdit", () => runTrueForgeInlineEdit()),
+		vscode.commands.registerCommand("roo-cline.trueforgeConfigureProvider", () =>
+			configureTrueForgeModelProvider(),
+		),
+	)
 }
 
 const getCommandsMap = ({ context, outputChannel, provider }: RegisterCommandOptions): Record<CommandId, any> => ({

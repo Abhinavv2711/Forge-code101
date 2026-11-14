@@ -1,0 +1,26 @@
+{
+	"manifest": {
+		"type": "custom",
+		"name": "custom-openai",
+		"baseUrl": "https://api.openai.com/v1",
+		"auth": { "apiKey": "REPLACE_WITH_YOUR_KEY" },
+		"models": [
+			{
+				"modelId": "gpt-4.1",
+				"name": "gpt-4.1",
+				"properties": {
+					"contextLength": 1047576,
+					"maxOutputTokens": 32768
+				}
+			},
+			{
+				"modelId": "gpt-4.1-mini",
+				"name": "gpt-4.1-mini",
+				"properties": {
+					"contextLength": 1047576,
+					"maxOutputTokens": 32768
+				}
+			}
+		]
+	}
+}
